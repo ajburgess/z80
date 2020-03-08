@@ -309,5 +309,78 @@ namespace Tests
             cpu.Step();
             Assert.AreEqual(0x44, cpu.C);
         }
+
+        [Test]
+        public void Load_D_A()
+        {
+            cpu.A = 0x44;
+            memory.Load(0x0000, 0x57);
+            cpu.Step();
+            Assert.AreEqual(0x44, cpu.D);
+        }
+
+        [Test]
+        public void Load_D_B()
+        {
+            cpu.B = 0x44;
+            memory.Load(0x0000, 0x50);
+            cpu.Step();
+            Assert.AreEqual(0x44, cpu.D);
+        }
+
+        [Test]
+        public void Load_D_C()
+        {
+            cpu.C = 0x44;
+            memory.Load(0x0000, 0x51);
+            cpu.Step();
+            Assert.AreEqual(0x44, cpu.D);
+        }
+
+        [Test]
+        public void Load_D_D()
+        {
+            cpu.D = 0x44;
+            memory.Load(0x0000, 0x52);
+            cpu.Step();
+            Assert.AreEqual(0x44, cpu.D);
+        }
+
+        [Test]
+        public void Load_D_E()
+        {
+            cpu.E = 0x44;
+            memory.Load(0x0000, 0x53);
+            cpu.Step();
+            Assert.AreEqual(0x44, cpu.D);
+        }
+
+        [Test]
+        public void Load_D_H()
+        {
+            cpu.H = 0x44;
+            memory.Load(0x0000, 0x54);
+            cpu.Step();
+            Assert.AreEqual(0x44, cpu.D);
+        }
+
+        [Test]
+        public void Load_D_L()
+        {
+            cpu.L = 0x44;
+            memory.Load(0x0000, 0x55);
+            cpu.Step();
+            Assert.AreEqual(0x44, cpu.D);
+        }
+
+        [Test]
+        public void Load_D_HL()
+        {
+            cpu.HL = 0x1234;
+            memory.Load(0x0000, 0x4E);
+            memory.Load(0x1234, 0x44);
+            cpu.Step();
+            Assert.AreEqual(0x44, cpu.D);
+        }
     }
 }
