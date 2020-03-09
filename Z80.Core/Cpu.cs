@@ -314,14 +314,86 @@ namespace Z80.Core
             // LD C, E
             mainInstructionSet[0x4B] = () => c = e;
 
-            // LD B, H
+            // LD C, H
             mainInstructionSet[0x4C] = () => c = h;
 
-            // LD B, L
+            // LD C, L
             mainInstructionSet[0x4D] = () => c = l;
 
-            // LD B, (HL)
+            // LD C, (HL)
             mainInstructionSet[0x4E] = () => c = memory.GetByte(HL);
+
+            // LD D, A
+            mainInstructionSet[0x57] = () => d = a;
+
+            // LD D, B
+            mainInstructionSet[0x50] = () => d = b;
+
+            // LD D, C
+            mainInstructionSet[0x51] = () => d = c;
+
+            // LD D, D
+            mainInstructionSet[0x52] = () => { };
+
+            // LD D, E
+            mainInstructionSet[0x53] = () => d = e;
+
+            // LD D, H
+            mainInstructionSet[0x54] = () => d = h;
+
+            // LD D, L
+            mainInstructionSet[0x55] = () => d = l;
+
+            // LD D, (HL)
+            mainInstructionSet[0x56] = () => d = memory.GetByte(HL);
+
+            // LD E, A
+            mainInstructionSet[0x5f] = () => e = a;
+
+            // LD E, B
+            mainInstructionSet[0x58] = () => e = b;
+
+            // LD E, C
+            mainInstructionSet[0x59] = () => e = c;
+
+            // LD E, D
+            mainInstructionSet[0x5A] = () => e = d;
+
+            // LD E, E
+            mainInstructionSet[0x5B] = () => { };
+
+            // LD E, H
+            mainInstructionSet[0x5C] = () => e = h;
+
+            // LD E, L
+            mainInstructionSet[0x5D] = () => e = l;
+
+            // LD E, (HL)
+            mainInstructionSet[0x5E] = () => e = memory.GetByte(HL);
+
+            // LD H, A
+            mainInstructionSet[0x67] = () => h = a;
+
+            // LD H, B
+            mainInstructionSet[0x60] = () => h = b;
+
+            // LD H, C
+            mainInstructionSet[0x61] = () => h = c;
+
+            // LD H, D
+            mainInstructionSet[0x62] = () => h = d;
+
+            // LD H, E
+            mainInstructionSet[0x63] = () => h = e;
+
+            // LD H, H
+            mainInstructionSet[0x64] = () => { };
+
+            // LD H, L
+            mainInstructionSet[0x65] = () => h = l;
+
+            // LD H, (HL)
+            mainInstructionSet[0x66] = () => h = memory.GetByte(HL);
 
             // HALT
             mainInstructionSet[0x76] = () => Halted = true;
