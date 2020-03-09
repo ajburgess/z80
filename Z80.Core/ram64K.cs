@@ -29,6 +29,19 @@ namespace Z80.Core
             Array.Copy(contents, 0, memory, address, contents.Length);
         }
 
+        public void Load(ushort address, byte[] contents, byte extra)
+        {
+            Array.Copy(contents, 0, memory, address, contents.Length);
+            memory[contents.Length] = extra;
+        }
+
+        public void Load(ushort address, byte[] contents, byte extra, byte extra2)
+        {
+            Array.Copy(contents, 0, memory, address, contents.Length);
+            memory[contents.Length] = extra;
+            memory[contents.Length + 1] = extra2;
+        }
+
         public byte GetByte(ushort address)
         {
             return memory[address];

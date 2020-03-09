@@ -6,8 +6,8 @@ namespace Z80.Core
     {
         private IMemory memory;
 
-        private UInt16 pc;
-        private UInt16 sp;
+        private ushort pc;
+        private ushort sp;
 
         private byte a;
         private byte f;
@@ -18,8 +18,11 @@ namespace Z80.Core
         private byte h;
         private byte l;
 
-        private UInt16 ix;
-        private UInt16 iy;
+        private byte i;
+        private byte r;
+
+        private ushort ix;
+        private ushort iy;
 
         private byte a2;
         private byte f2;
@@ -33,11 +36,12 @@ namespace Z80.Core
         public Action<byte> AfterGetOpcode { private get; set; }
 
         private Action[] mainInstructionSet;
+        private Action[] edInstructionSet;
 
         public Cpu(IMemory memory)
         {
             this.memory = memory;
-            PrepareMainInstructions();
+            PrepareInstructions();
             Reset();
         }
 
@@ -101,6 +105,18 @@ namespace Z80.Core
         {
             get { return l; }
             set { l = value; }
+        }
+
+        byte IDebug.I
+        {
+            get { return i; }
+            set { i = value; }
+        }
+
+        byte IDebug.R
+        {
+            get { return r; }
+            set { r = value; }
         }
 
         private ushort BC
@@ -208,21 +224,32 @@ namespace Z80.Core
             return opcode;
         }
 
+        private ushort GetNextOpcodeWord()
+        {
+            byte low = GetNextOpcode();
+            byte high = GetNextOpcode();
+            return (ushort)((high << 8) + low);
+        }
+
         private void ExecuteNextInstruction()
         {
             // Read opcode of next instruction
             byte opcode = GetNextOpcode();
 
-            // Assume main instruction set
+            // Lookup the instruction
             var instruction = mainInstructionSet[opcode];
 
             // Execute the instruction
             instruction.Invoke();
         }
 
-        private void PrepareMainInstructions()
+        // Table 6, page 42
+        private void Prepare_8_Bit_Load(Action[] mainInstructionSet, Action[] edInstructionSet)
         {
-            mainInstructionSet = CreateInstructionSet();
+            // ---------------------
+            // Desination: Register
+            // Source:     Immediate
+            // ---------------------
 
             // LD A, n
             mainInstructionSet[0x3e] = () => a = GetNextOpcode();
@@ -245,6 +272,11 @@ namespace Z80.Core
             // LD L, n
             mainInstructionSet[0x2e] = () => l = GetNextOpcode();
 
+            // ---------------------
+            // Destination: Register
+            // Source:      Register
+            // ---------------------
+
             // LD A, A
             mainInstructionSet[0x7f] = () => { };
 
@@ -265,15 +297,6 @@ namespace Z80.Core
 
             // LD A, L
             mainInstructionSet[0x7D] = () => a = l;
-
-            // LD A, (HL)
-            mainInstructionSet[0x7E] = () => a = memory.GetByte(HL);
-
-            // LD A, (BC)
-            mainInstructionSet[0x0A] = () => a = memory.GetByte(BC);
-
-            // LD A, (DE)
-            mainInstructionSet[0x1A] = () => a = memory.GetByte(DE);
 
             // LD B, A
             mainInstructionSet[0x47] = () => b = a;
@@ -296,9 +319,6 @@ namespace Z80.Core
             // LD B, L
             mainInstructionSet[0x45] = () => b = l;
 
-            // LD B, (HL)
-            mainInstructionSet[0x46] = () => b = memory.GetByte(HL);
-
             // LD C, A
             mainInstructionSet[0x4F] = () => c = a;
 
@@ -319,9 +339,6 @@ namespace Z80.Core
 
             // LD C, L
             mainInstructionSet[0x4D] = () => c = l;
-
-            // LD C, (HL)
-            mainInstructionSet[0x4E] = () => c = memory.GetByte(HL);
 
             // LD D, A
             mainInstructionSet[0x57] = () => d = a;
@@ -344,9 +361,6 @@ namespace Z80.Core
             // LD D, L
             mainInstructionSet[0x55] = () => d = l;
 
-            // LD D, (HL)
-            mainInstructionSet[0x56] = () => d = memory.GetByte(HL);
-
             // LD E, A
             mainInstructionSet[0x5f] = () => e = a;
 
@@ -367,9 +381,6 @@ namespace Z80.Core
 
             // LD E, L
             mainInstructionSet[0x5D] = () => e = l;
-
-            // LD E, (HL)
-            mainInstructionSet[0x5E] = () => e = memory.GetByte(HL);
 
             // LD H, A
             mainInstructionSet[0x67] = () => h = a;
@@ -392,20 +403,163 @@ namespace Z80.Core
             // LD H, L
             mainInstructionSet[0x65] = () => h = l;
 
+            // LD L, A
+            mainInstructionSet[0x6f] = () => l = a;
+
+            // LD L, B
+            mainInstructionSet[0x68] = () => l = b;
+
+            // LD L, C
+            mainInstructionSet[0x69] = () => l = c;
+
+            // LD L, D
+            mainInstructionSet[0x6A] = () => l = d;
+
+            // LD L, E
+            mainInstructionSet[0x6B] = () => l = e;
+
+            // LD L, H
+            mainInstructionSet[0x6C] = () => l = h;
+
+            // LD L, L
+            mainInstructionSet[0x6D] = () => { };
+
+            // ------------------------------
+            // Destination: Register
+            // Source:      Register Indirect
+            // ------------------------------
+
+            // LD A, (HL)
+            mainInstructionSet[0x7E] = () => a = memory.GetByte(HL);
+
+            // LD A, (BC)
+            mainInstructionSet[0x0A] = () => a = memory.GetByte(BC);
+
+            // LD A, (DE)
+            mainInstructionSet[0x1A] = () => a = memory.GetByte(DE);
+
+            // LD B, (HL)
+            mainInstructionSet[0x46] = () => b = memory.GetByte(HL);
+
+            // LD C, (HL)
+            mainInstructionSet[0x4E] = () => c = memory.GetByte(HL);
+
+            // LD D, (HL)
+            mainInstructionSet[0x56] = () => d = memory.GetByte(HL);
+
+            // LD E, (HL)
+            mainInstructionSet[0x5E] = () => e = memory.GetByte(HL);
+
             // LD H, (HL)
             mainInstructionSet[0x66] = () => h = memory.GetByte(HL);
 
+            // LD L, (HL)
+            mainInstructionSet[0x6E] = () => l = memory.GetByte(HL);
+
+            // ------------------------------
+            // Destination: Register Indirect
+            // Source:      Register
+            // ------------------------------
+
+            // LD (HL), A
+            mainInstructionSet[0x77] = () => memory.SetByte(HL, a);
+
+            // LD (HL), B
+            mainInstructionSet[0x70] = () => memory.SetByte(HL, b);
+
+            // LD (HL), C
+            mainInstructionSet[0x71] = () => memory.SetByte(HL, c);
+
+            // LD (HL), D
+            mainInstructionSet[0x72] = () => memory.SetByte(HL, d);
+
+            // LD (HL), E
+            mainInstructionSet[0x73] = () => memory.SetByte(HL, e);
+
+            // LD (HL), H
+            mainInstructionSet[0x74] = () => memory.SetByte(HL, h);
+
+            // LD (HL), L
+            mainInstructionSet[0x75] = () => memory.SetByte(HL, l);
+
+            // LD (BC), A
+            mainInstructionSet[0x02] = () => memory.SetByte(BC, a);
+
+            // LD (DE), A
+            mainInstructionSet[0x12] = () => memory.SetByte(DE, a);
+
+            // ------------------------------
+            // Destination: Register Indirect
+            // Source:      Immediate
+            // ------------------------------
+
+            // LD (HL), n
+            mainInstructionSet[0x36] = () => memory.SetByte(HL, GetNextOpcode());
+
+            // ------------------------------
+            // Destination: Register
+            // Source:      Extended Address
+            // ------------------------------
+
+            // LD A, (nn)
+            mainInstructionSet[0x3A] = () => a = memory.GetByte(GetNextOpcodeWord());
+
+            // ------------------------------
+            // Destination: Extended Address
+            // Source:      Register
+            // ------------------------------
+
+            // LD (nn), A
+            mainInstructionSet[0x32] = () => memory.SetByte(GetNextOpcodeWord(), a);
+
+            // ------------------------------
+            // Destination: Register
+            // Source:      Implied
+            // ------------------------------
+
+            // LD A, I
+            edInstructionSet[0x57] = () => a = i;
+
+            // LD A, R
+            edInstructionSet[0x5F] = () => a = r;
+
+            // ------------------------------
+            // Destination: Implied
+            // Source:      Register
+            // ------------------------------
+
+            // LD I, A
+            edInstructionSet[0x47] = () => i = a;
+
+            // LD R, A
+            edInstructionSet[0x4F] = () => r = a;
+        }
+
+        // Table 20, page 64
+        private void Prepare_Miscellaneous_CPU_Control(Action[] mainInstructionSet)
+        {
             // HALT
             mainInstructionSet[0x76] = () => Halted = true;
         }
 
-        private Action[] CreateInstructionSet()
+        private void PrepareInstructions()
+        {
+            mainInstructionSet = CreateInstructionSet();
+            edInstructionSet = CreateInstructionSet(0xED);
+
+            mainInstructionSet[0xED] = () => edInstructionSet[GetNextOpcode()].Invoke();
+
+            Prepare_8_Bit_Load(mainInstructionSet, edInstructionSet);
+            Prepare_Miscellaneous_CPU_Control(mainInstructionSet);
+        }
+
+        private Action[] CreateInstructionSet(byte? prefixOpcode = null)
         {
             Action[] instructionSet = new Action[0x100];
 
             for (int opcode = 0x00; opcode <= 0xff; opcode++)
             {
-                instructionSet[opcode] = () => throw new Exception("Unknown opcode");
+                instructionSet[opcode] = () => throw new Exception($"Unknown opcode: {prefixOpcode:X2} {opcode:X2}");
             }
 
             return instructionSet;

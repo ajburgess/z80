@@ -27,6 +27,9 @@ namespace Z80.Core
         ushort IX { get; set; }
         ushort IY { get; set; }
 
+        byte I { get; set; }
+        byte R { get; set; }
+
         Action<byte> AfterGetOpcode { set; }
 
         void Step();
