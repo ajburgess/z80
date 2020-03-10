@@ -71,5 +71,15 @@ namespace Z80.Core.Tests
             cpu.Step();
             HexAssert.AreEqual(value, GetWord(destination));
         }
+
+        [TestCase(new byte[] { 0xED, 0x4B, 0x34, 0x12 }, "BC", (ushort)0x1234, 0x44, (ushort)0x1235, 0x55, (ushort)0x4455)]
+        public void Load_Register_Extended(byte[] opcodes, string destination, ushort mem1, byte val1, ushort mem2, byte val2, ushort value)
+        {
+            memory.Load(0x0000, opcodes);
+            memory.Load(mem1, val1);
+            memory.Load(mem2, val2);
+            cpu.Step();
+            HexAssert.AreEqual(value, GetWord(destination));
+        }
     }
 }
