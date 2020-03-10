@@ -37,6 +37,8 @@ namespace Z80.Core
 
         private Action[] mainInstructionSet;
         private Action[] edInstructionSet;
+        private Action[] ddInstructionSet;
+        private Action[] fdInstructionSet;
 
         public Cpu(IMemory memory)
         {
@@ -184,8 +186,8 @@ namespace Z80.Core
 
         ushort IDebug.IY
         {
-            get { return ix; }
-            set { ix = value; }
+            get { return iy; }
+            set { iy = value; }
         }
 
         public void Reset()
@@ -244,7 +246,7 @@ namespace Z80.Core
         }
 
         // Table 6, page 42
-        private void Prepare_8_Bit_Load(Action[] mainInstructionSet, Action[] edInstructionSet)
+        private void Prepare_8_Bit_Load()
         {
             // ---------------------
             // Desination: Register
@@ -533,10 +535,121 @@ namespace Z80.Core
 
             // LD R, A
             edInstructionSet[0x4F] = () => r = a;
+
+            // ------------------------------
+            // Destination: Register
+            // Source:      Indexed
+            // ------------------------------
+
+            // LD A, (IX + d)
+            ddInstructionSet[0x7E] = () => a = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
+
+            // LD A, (IY + d)
+            fdInstructionSet[0x7E] = () => a = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
+
+            // LD B, (IX + d)
+            ddInstructionSet[0x46] = () => b = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
+
+            // LD B, (IY + d)
+            fdInstructionSet[0x46] = () => b = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
+
+            // LD C, (IX + d)
+            ddInstructionSet[0x4E] = () => c = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
+
+            // LD C, (IY + d)
+            fdInstructionSet[0x4E] = () => c = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
+
+            // LD D, (IX + d)
+            ddInstructionSet[0x56] = () => d = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
+
+            // LD D, (IY + d)
+            fdInstructionSet[0x56] = () => d = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
+
+            // LD E, (IX + d)
+            ddInstructionSet[0x5E] = () => e = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
+
+            // LD E, (IY + d)
+            fdInstructionSet[0x5E] = () => e = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
+
+            // LD H, (IX + d)
+            ddInstructionSet[0x66] = () => h = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
+
+            // LD H, (IY + d)
+            fdInstructionSet[0x66] = () => h = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
+
+            // LD L, (IX + d)
+            ddInstructionSet[0x6E] = () => l = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
+
+            // LD L, (IY + d)
+            fdInstructionSet[0x6E] = () => l = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
+
+
+            // ------------------------------
+            // Destination: Indexed
+            // Source:      Immediate
+            // ------------------------------
+
+            // LD (IX + d), n
+            ddInstructionSet[0x36] = () => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), GetNextOpcode());
+
+            // LD (IY + d), n
+            fdInstructionSet[0x36] = () => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), GetNextOpcode());
+
+            // ------------------------------
+            // Destination: Indexed
+            // Source:      Register
+            // ------------------------------
+
+            // LD (IX + d), A
+            ddInstructionSet[0x77] = () => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), a);
+
+            // LD (IY + d), A
+            fdInstructionSet[0x77] = () => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), a);
+
+            // LD (IX + d), B
+            ddInstructionSet[0x70] = () => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), b);
+
+            // LD (IY + d), B
+            fdInstructionSet[0x70] = () => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), b);
+
+            // LD (IX + d), C
+            ddInstructionSet[0x71] = () => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), c);
+
+            // LD (IY + d), C
+            fdInstructionSet[0x71] = () => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), c);
+
+            // LD (IX + d), D
+            ddInstructionSet[0x72] = () => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), d);
+
+            // LD (IY + d), D
+            fdInstructionSet[0x72] = () => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), d);
+
+            // LD (IX + d), E
+            ddInstructionSet[0x73] = () => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), e);
+
+            // LD (IY + d), E
+            fdInstructionSet[0x73] = () => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), e);
+
+            // LD (IX + d), H
+            ddInstructionSet[0x74] = () => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), h);
+
+            // LD (IY + d), H
+            fdInstructionSet[0x74] = () => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), h);
+
+            // LD (IX + d), L
+            ddInstructionSet[0x75] = () => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), l);
+
+            // LD (IY + d), L
+            fdInstructionSet[0x75] = () => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), l);
+        }
+
+        private ushort CalculateAddress(ushort start, sbyte offset)
+        {
+            return (ushort)(start + offset);
         }
 
         // Table 20, page 64
-        private void Prepare_Miscellaneous_CPU_Control(Action[] mainInstructionSet)
+        private void Prepare_Miscellaneous_CPU_Control()
         {
             // HALT
             mainInstructionSet[0x76] = () => Halted = true;
@@ -546,11 +659,15 @@ namespace Z80.Core
         {
             mainInstructionSet = CreateInstructionSet();
             edInstructionSet = CreateInstructionSet(0xED);
+            ddInstructionSet = CreateInstructionSet(0xDD);
+            fdInstructionSet = CreateInstructionSet(0xFD);
 
             mainInstructionSet[0xED] = () => edInstructionSet[GetNextOpcode()].Invoke();
+            mainInstructionSet[0xDD] = () => ddInstructionSet[GetNextOpcode()].Invoke();
+            mainInstructionSet[0xFD] = () => fdInstructionSet[GetNextOpcode()].Invoke();
 
-            Prepare_8_Bit_Load(mainInstructionSet, edInstructionSet);
-            Prepare_Miscellaneous_CPU_Control(mainInstructionSet);
+            Prepare_8_Bit_Load();
+            Prepare_Miscellaneous_CPU_Control();
         }
 
         private Action[] CreateInstructionSet(byte? prefixOpcode = null)
