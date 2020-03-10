@@ -79,7 +79,7 @@ namespace Z80.Core.Tests
         {
             memory.Load(0x0000, opcodes);
             cpu.Step();
-            Assert.AreEqual(value, GetByte(destination));
+            HexAssert.AreEqual(value, GetByte(destination));
         }
 
         [Test]
@@ -88,7 +88,7 @@ namespace Z80.Core.Tests
             memory.Load(0x0000, 0x3A, 0x34, 0x12);
             memory.Load(0x1234, 0x44);
             cpu.Step();
-            Assert.AreEqual(0x44, cpu.A);
+            HexAssert.AreEqual(0x44, cpu.A);
         }
 
         [Test]
@@ -97,7 +97,7 @@ namespace Z80.Core.Tests
             memory.Load(0x0000, 0x32, 0x34, 0x12);
             cpu.A = 0x44;
             cpu.Step();
-            Assert.AreEqual(0x44, memory.GetByte(0x1234));
+            HexAssert.AreEqual(0x44, memory.GetByte(0x1234));
         }
 
         public void Load_RegisterIndirect_Immediate()
@@ -106,7 +106,7 @@ namespace Z80.Core.Tests
             memory.SetByte(0x1234, 0x44);
             cpu.HL = 0x1234;
             cpu.Step();
-            Assert.AreEqual(0x44, memory.GetByte(0x1234));
+            HexAssert.AreEqual(0x44, memory.GetByte(0x1234));
         }
 
         [TestCase(new byte[] { 0x77 }, "(HL)", "A", 0x44)]
@@ -123,7 +123,7 @@ namespace Z80.Core.Tests
             SetByte(source, value);
             memory.Load(0x0000, opcodes);
             cpu.Step();
-            Assert.AreEqual(value, GetByte(destination));
+            HexAssert.AreEqual(value, GetByte(destination));
         }
 
         [TestCase(new byte[] { 0x7F }, "A", "A", 0x44)]
@@ -180,7 +180,7 @@ namespace Z80.Core.Tests
             SetByte(source, value);
             memory.Load(0x0000, opcodes);
             cpu.Step();
-            Assert.AreEqual(value, GetByte(destination));
+            HexAssert.AreEqual(value, GetByte(destination));
         }
 
         [TestCase(new byte[] { 0xED, 0x57 }, "I", 0x44)]
@@ -190,7 +190,7 @@ namespace Z80.Core.Tests
             SetByte(source, value);
             memory.Load(0x0000, opcodes);
             cpu.Step();
-            Assert.AreEqual(value, cpu.A);
+            HexAssert.AreEqual(value, cpu.A);
         }
 
         [TestCase(new byte[] { 0xED, 0x47 }, "I", 0x44)]
@@ -200,7 +200,7 @@ namespace Z80.Core.Tests
             memory.Load(0x0000, opcodes);
             cpu.A = value;
             cpu.Step();
-            Assert.AreEqual(value, GetByte(destination));
+            HexAssert.AreEqual(value, GetByte(destination));
         }
 
         [TestCase(new byte[] { 0xDD, 0x7E, 0x08 }, "A", "IX", (ushort)0x1000, (ushort)0x1008, 0x44)]
@@ -224,7 +224,7 @@ namespace Z80.Core.Tests
             memory.SetByte(memoryAddress, value);
             cpu.Step();
             byte destinationValue = GetByte(destinationRegister);
-            Assert.AreEqual(value, destinationValue);
+            HexAssert.AreEqual(value, destinationValue);
         }
 
         [TestCase(new byte[] { 0xDD, 0x7E, 0xF1 }, "A", "IX", (ushort)0x1000, (ushort)0x0FF1, 0x44)]
@@ -248,7 +248,7 @@ namespace Z80.Core.Tests
             memory.SetByte(memoryAddress, value);
             cpu.Step();
             byte destinationValue = GetByte(destinationRegister);
-            Assert.AreEqual(value, destinationValue);
+            HexAssert.AreEqual(value, destinationValue);
         }
 
         [TestCase(new byte[] { 0xDD, 0x36, 0xF1, 0x44 }, "IX", (ushort)0x1000, (ushort)0x0FF1, 0x44)]
@@ -259,7 +259,7 @@ namespace Z80.Core.Tests
             SetWord(destinationRegister, destinationRegisterValue);
             cpu.Step();
             byte destinationValue = memory.GetByte(memoryAddress);
-            Assert.AreEqual(value, destinationValue);
+            HexAssert.AreEqual(value, destinationValue);
         }
 
         [TestCase(new byte[] { 0xDD, 0x77, 0xF1 }, "IX", "A", (ushort)0x1000, (ushort)0x0FF1, 0x44)]
@@ -283,7 +283,7 @@ namespace Z80.Core.Tests
             SetByte(sourceRegister, value);
             cpu.Step();
             byte destinationValue = memory.GetByte(memoryAddress);
-            Assert.AreEqual(value, destinationValue);
+            HexAssert.AreEqual(value, destinationValue);
         }
 
         [TestCase(new byte[] { 0x7E }, "A", "(HL)", 0x44)]
@@ -307,7 +307,7 @@ namespace Z80.Core.Tests
             SetByte(source, value);
             memory.Load(0x0000, opcodes);
             cpu.Step();
-            Assert.AreEqual(value, GetByte(destination));
+            HexAssert.AreEqual(value, GetByte(destination));
         }
     }
 }

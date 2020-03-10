@@ -35,10 +35,10 @@ namespace Z80.Core
 
         public Action<byte> AfterGetOpcode { private get; set; }
 
-        private Action[] mainInstructionSet;
-        private Action[] edInstructionSet;
-        private Action[] ddInstructionSet;
-        private Action[] fdInstructionSet;
+        private Action<byte>[] mainInstructionSet;
+        private Action<byte>[] edInstructionSet;
+        private Action<byte>[] ddInstructionSet;
+        private Action<byte>[] fdInstructionSet;
 
         public Cpu(IMemory memory)
         {
@@ -119,6 +119,25 @@ namespace Z80.Core
         {
             get { return r; }
             set { r = value; }
+        }
+
+        private ushort AF
+        {
+            get
+            {
+                return (ushort)((a << 8) + f);
+            }
+            set
+            {
+                a = (byte)((value & 0xff00) >> 8);
+                f = (byte)(value & 0xff);
+            }
+        }
+
+        ushort IDebug.AF
+        {
+            get { return AF; }
+            set { AF = value; }
         }
 
         private ushort BC
@@ -242,7 +261,7 @@ namespace Z80.Core
             var instruction = mainInstructionSet[opcode];
 
             // Execute the instruction
-            instruction.Invoke();
+            instruction.Invoke(opcode);
         }
 
         // Table 6, page 42
@@ -254,25 +273,25 @@ namespace Z80.Core
             // ---------------------
 
             // LD A, n
-            mainInstructionSet[0x3e] = () => a = GetNextOpcode();
+            mainInstructionSet[0x3e] = (o) => a = GetNextOpcode();
 
             // LD B, n
-            mainInstructionSet[0x06] = () => b = GetNextOpcode();
+            mainInstructionSet[0x06] = (o) => b = GetNextOpcode();
 
             // LD C, n
-            mainInstructionSet[0x0e] = () => c = GetNextOpcode();
+            mainInstructionSet[0x0e] = (o) => c = GetNextOpcode();
 
             // LD D, n
-            mainInstructionSet[0x16] = () => d = GetNextOpcode();
+            mainInstructionSet[0x16] = (o) => d = GetNextOpcode();
 
             // LD E, n
-            mainInstructionSet[0x1e] = () => e = GetNextOpcode();
+            mainInstructionSet[0x1e] = (o) => e = GetNextOpcode();
 
             // LD H, n
-            mainInstructionSet[0x26] = () => h = GetNextOpcode();
+            mainInstructionSet[0x26] = (o) => h = GetNextOpcode();
 
             // LD L, n
-            mainInstructionSet[0x2e] = () => l = GetNextOpcode();
+            mainInstructionSet[0x2e] = (o) => l = GetNextOpcode();
 
             // ---------------------
             // Destination: Register
@@ -280,151 +299,151 @@ namespace Z80.Core
             // ---------------------
 
             // LD A, A
-            mainInstructionSet[0x7f] = () => { };
+            mainInstructionSet[0x7f] = (o) => { };
 
             // LD A, B
-            mainInstructionSet[0x78] = () => a = b;
+            mainInstructionSet[0x78] = (o) => a = b;
 
             // LD A, C
-            mainInstructionSet[0x79] = () => a = c;
+            mainInstructionSet[0x79] = (o) => a = c;
 
             // LD A, D
-            mainInstructionSet[0x7A] = () => a = d;
+            mainInstructionSet[0x7A] = (o) => a = d;
 
             // LD A, E
-            mainInstructionSet[0x7B] = () => a = e;
+            mainInstructionSet[0x7B] = (o) => a = e;
 
             // LD A, H
-            mainInstructionSet[0x7C] = () => a = h;
+            mainInstructionSet[0x7C] = (o) => a = h;
 
             // LD A, L
-            mainInstructionSet[0x7D] = () => a = l;
+            mainInstructionSet[0x7D] = (o) => a = l;
 
             // LD B, A
-            mainInstructionSet[0x47] = () => b = a;
+            mainInstructionSet[0x47] = (o) => b = a;
 
             // LD B, B
-            mainInstructionSet[0x40] = () => { };
+            mainInstructionSet[0x40] = (o) => { };
 
             // LD B, C
-            mainInstructionSet[0x41] = () => b = c;
+            mainInstructionSet[0x41] = (o) => b = c;
 
             // LD B, D
-            mainInstructionSet[0x42] = () => b = d;
+            mainInstructionSet[0x42] = (o) => b = d;
 
             // LD B, E
-            mainInstructionSet[0x43] = () => b = e;
+            mainInstructionSet[0x43] = (o) => b = e;
 
             // LD B, H
-            mainInstructionSet[0x44] = () => b = h;
+            mainInstructionSet[0x44] = (o) => b = h;
 
             // LD B, L
-            mainInstructionSet[0x45] = () => b = l;
+            mainInstructionSet[0x45] = (o) => b = l;
 
             // LD C, A
-            mainInstructionSet[0x4F] = () => c = a;
+            mainInstructionSet[0x4F] = (o) => c = a;
 
             // LD C, B
-            mainInstructionSet[0x48] = () => c = b;
+            mainInstructionSet[0x48] = (o) => c = b;
 
             // LD C, C
-            mainInstructionSet[0x49] = () => { };
+            mainInstructionSet[0x49] = (o) => { };
 
             // LD C, D
-            mainInstructionSet[0x4A] = () => c = d;
+            mainInstructionSet[0x4A] = (o) => c = d;
 
             // LD C, E
-            mainInstructionSet[0x4B] = () => c = e;
+            mainInstructionSet[0x4B] = (o) => c = e;
 
             // LD C, H
-            mainInstructionSet[0x4C] = () => c = h;
+            mainInstructionSet[0x4C] = (o) => c = h;
 
             // LD C, L
-            mainInstructionSet[0x4D] = () => c = l;
+            mainInstructionSet[0x4D] = (o) => c = l;
 
             // LD D, A
-            mainInstructionSet[0x57] = () => d = a;
+            mainInstructionSet[0x57] = (o) => d = a;
 
             // LD D, B
-            mainInstructionSet[0x50] = () => d = b;
+            mainInstructionSet[0x50] = (o) => d = b;
 
             // LD D, C
-            mainInstructionSet[0x51] = () => d = c;
+            mainInstructionSet[0x51] = (o) => d = c;
 
             // LD D, D
-            mainInstructionSet[0x52] = () => { };
+            mainInstructionSet[0x52] = (o) => { };
 
             // LD D, E
-            mainInstructionSet[0x53] = () => d = e;
+            mainInstructionSet[0x53] = (o) => d = e;
 
             // LD D, H
-            mainInstructionSet[0x54] = () => d = h;
+            mainInstructionSet[0x54] = (o) => d = h;
 
             // LD D, L
-            mainInstructionSet[0x55] = () => d = l;
+            mainInstructionSet[0x55] = (o) => d = l;
 
             // LD E, A
-            mainInstructionSet[0x5f] = () => e = a;
+            mainInstructionSet[0x5f] = (o) => e = a;
 
             // LD E, B
-            mainInstructionSet[0x58] = () => e = b;
+            mainInstructionSet[0x58] = (o) => e = b;
 
             // LD E, C
-            mainInstructionSet[0x59] = () => e = c;
+            mainInstructionSet[0x59] = (o) => e = c;
 
             // LD E, D
-            mainInstructionSet[0x5A] = () => e = d;
+            mainInstructionSet[0x5A] = (o) => e = d;
 
             // LD E, E
-            mainInstructionSet[0x5B] = () => { };
+            mainInstructionSet[0x5B] = (o) => { };
 
             // LD E, H
-            mainInstructionSet[0x5C] = () => e = h;
+            mainInstructionSet[0x5C] = (o) => e = h;
 
             // LD E, L
-            mainInstructionSet[0x5D] = () => e = l;
+            mainInstructionSet[0x5D] = (o) => e = l;
 
             // LD H, A
-            mainInstructionSet[0x67] = () => h = a;
+            mainInstructionSet[0x67] = (o) => h = a;
 
             // LD H, B
-            mainInstructionSet[0x60] = () => h = b;
+            mainInstructionSet[0x60] = (o) => h = b;
 
             // LD H, C
-            mainInstructionSet[0x61] = () => h = c;
+            mainInstructionSet[0x61] = (o) => h = c;
 
             // LD H, D
-            mainInstructionSet[0x62] = () => h = d;
+            mainInstructionSet[0x62] = (o) => h = d;
 
             // LD H, E
-            mainInstructionSet[0x63] = () => h = e;
+            mainInstructionSet[0x63] = (o) => h = e;
 
             // LD H, H
-            mainInstructionSet[0x64] = () => { };
+            mainInstructionSet[0x64] = (o) => { };
 
             // LD H, L
-            mainInstructionSet[0x65] = () => h = l;
+            mainInstructionSet[0x65] = (o) => h = l;
 
             // LD L, A
-            mainInstructionSet[0x6f] = () => l = a;
+            mainInstructionSet[0x6f] = (o) => l = a;
 
             // LD L, B
-            mainInstructionSet[0x68] = () => l = b;
+            mainInstructionSet[0x68] = (o) => l = b;
 
             // LD L, C
-            mainInstructionSet[0x69] = () => l = c;
+            mainInstructionSet[0x69] = (o) => l = c;
 
             // LD L, D
-            mainInstructionSet[0x6A] = () => l = d;
+            mainInstructionSet[0x6A] = (o) => l = d;
 
             // LD L, E
-            mainInstructionSet[0x6B] = () => l = e;
+            mainInstructionSet[0x6B] = (o) => l = e;
 
             // LD L, H
-            mainInstructionSet[0x6C] = () => l = h;
+            mainInstructionSet[0x6C] = (o) => l = h;
 
             // LD L, L
-            mainInstructionSet[0x6D] = () => { };
+            mainInstructionSet[0x6D] = (o) => { };
 
             // ------------------------------
             // Destination: Register
@@ -432,31 +451,31 @@ namespace Z80.Core
             // ------------------------------
 
             // LD A, (HL)
-            mainInstructionSet[0x7E] = () => a = memory.GetByte(HL);
+            mainInstructionSet[0x7E] = (o) => a = memory.GetByte(HL);
 
             // LD A, (BC)
-            mainInstructionSet[0x0A] = () => a = memory.GetByte(BC);
+            mainInstructionSet[0x0A] = (o) => a = memory.GetByte(BC);
 
             // LD A, (DE)
-            mainInstructionSet[0x1A] = () => a = memory.GetByte(DE);
+            mainInstructionSet[0x1A] = (o) => a = memory.GetByte(DE);
 
             // LD B, (HL)
-            mainInstructionSet[0x46] = () => b = memory.GetByte(HL);
+            mainInstructionSet[0x46] = (o) => b = memory.GetByte(HL);
 
             // LD C, (HL)
-            mainInstructionSet[0x4E] = () => c = memory.GetByte(HL);
+            mainInstructionSet[0x4E] = (o) => c = memory.GetByte(HL);
 
             // LD D, (HL)
-            mainInstructionSet[0x56] = () => d = memory.GetByte(HL);
+            mainInstructionSet[0x56] = (o) => d = memory.GetByte(HL);
 
             // LD E, (HL)
-            mainInstructionSet[0x5E] = () => e = memory.GetByte(HL);
+            mainInstructionSet[0x5E] = (o) => e = memory.GetByte(HL);
 
             // LD H, (HL)
-            mainInstructionSet[0x66] = () => h = memory.GetByte(HL);
+            mainInstructionSet[0x66] = (o) => h = memory.GetByte(HL);
 
             // LD L, (HL)
-            mainInstructionSet[0x6E] = () => l = memory.GetByte(HL);
+            mainInstructionSet[0x6E] = (o) => l = memory.GetByte(HL);
 
             // ------------------------------
             // Destination: Register Indirect
@@ -464,31 +483,31 @@ namespace Z80.Core
             // ------------------------------
 
             // LD (HL), A
-            mainInstructionSet[0x77] = () => memory.SetByte(HL, a);
+            mainInstructionSet[0x77] = (o) => memory.SetByte(HL, a);
 
             // LD (HL), B
-            mainInstructionSet[0x70] = () => memory.SetByte(HL, b);
+            mainInstructionSet[0x70] = (o) => memory.SetByte(HL, b);
 
             // LD (HL), C
-            mainInstructionSet[0x71] = () => memory.SetByte(HL, c);
+            mainInstructionSet[0x71] = (o) => memory.SetByte(HL, c);
 
             // LD (HL), D
-            mainInstructionSet[0x72] = () => memory.SetByte(HL, d);
+            mainInstructionSet[0x72] = (o) => memory.SetByte(HL, d);
 
             // LD (HL), E
-            mainInstructionSet[0x73] = () => memory.SetByte(HL, e);
+            mainInstructionSet[0x73] = (o) => memory.SetByte(HL, e);
 
             // LD (HL), H
-            mainInstructionSet[0x74] = () => memory.SetByte(HL, h);
+            mainInstructionSet[0x74] = (o) => memory.SetByte(HL, h);
 
             // LD (HL), L
-            mainInstructionSet[0x75] = () => memory.SetByte(HL, l);
+            mainInstructionSet[0x75] = (o) => memory.SetByte(HL, l);
 
             // LD (BC), A
-            mainInstructionSet[0x02] = () => memory.SetByte(BC, a);
+            mainInstructionSet[0x02] = (o) => memory.SetByte(BC, a);
 
             // LD (DE), A
-            mainInstructionSet[0x12] = () => memory.SetByte(DE, a);
+            mainInstructionSet[0x12] = (o) => memory.SetByte(DE, a);
 
             // ------------------------------
             // Destination: Register Indirect
@@ -496,7 +515,7 @@ namespace Z80.Core
             // ------------------------------
 
             // LD (HL), n
-            mainInstructionSet[0x36] = () => memory.SetByte(HL, GetNextOpcode());
+            mainInstructionSet[0x36] = (o) => memory.SetByte(HL, GetNextOpcode());
 
             // ------------------------------
             // Destination: Register
@@ -504,7 +523,7 @@ namespace Z80.Core
             // ------------------------------
 
             // LD A, (nn)
-            mainInstructionSet[0x3A] = () => a = memory.GetByte(GetNextOpcodeWord());
+            mainInstructionSet[0x3A] = (o) => a = memory.GetByte(GetNextOpcodeWord());
 
             // ------------------------------
             // Destination: Extended Address
@@ -512,7 +531,7 @@ namespace Z80.Core
             // ------------------------------
 
             // LD (nn), A
-            mainInstructionSet[0x32] = () => memory.SetByte(GetNextOpcodeWord(), a);
+            mainInstructionSet[0x32] = (o) => memory.SetByte(GetNextOpcodeWord(), a);
 
             // ------------------------------
             // Destination: Register
@@ -520,10 +539,10 @@ namespace Z80.Core
             // ------------------------------
 
             // LD A, I
-            edInstructionSet[0x57] = () => a = i;
+            edInstructionSet[0x57] = (o) => a = i;
 
             // LD A, R
-            edInstructionSet[0x5F] = () => a = r;
+            edInstructionSet[0x5F] = (o) => a = r;
 
             // ------------------------------
             // Destination: Implied
@@ -531,10 +550,10 @@ namespace Z80.Core
             // ------------------------------
 
             // LD I, A
-            edInstructionSet[0x47] = () => i = a;
+            edInstructionSet[0x47] = (o) => i = a;
 
             // LD R, A
-            edInstructionSet[0x4F] = () => r = a;
+            edInstructionSet[0x4F] = (o) => r = a;
 
             // ------------------------------
             // Destination: Register
@@ -542,46 +561,46 @@ namespace Z80.Core
             // ------------------------------
 
             // LD A, (IX + d)
-            ddInstructionSet[0x7E] = () => a = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
+            ddInstructionSet[0x7E] = (o) => a = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
 
             // LD A, (IY + d)
-            fdInstructionSet[0x7E] = () => a = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
+            fdInstructionSet[0x7E] = (o) => a = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
 
             // LD B, (IX + d)
-            ddInstructionSet[0x46] = () => b = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
+            ddInstructionSet[0x46] = (o) => b = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
 
             // LD B, (IY + d)
-            fdInstructionSet[0x46] = () => b = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
+            fdInstructionSet[0x46] = (o) => b = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
 
             // LD C, (IX + d)
-            ddInstructionSet[0x4E] = () => c = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
+            ddInstructionSet[0x4E] = (o) => c = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
 
             // LD C, (IY + d)
-            fdInstructionSet[0x4E] = () => c = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
+            fdInstructionSet[0x4E] = (o) => c = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
 
             // LD D, (IX + d)
-            ddInstructionSet[0x56] = () => d = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
+            ddInstructionSet[0x56] = (o) => d = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
 
             // LD D, (IY + d)
-            fdInstructionSet[0x56] = () => d = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
+            fdInstructionSet[0x56] = (o) => d = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
 
             // LD E, (IX + d)
-            ddInstructionSet[0x5E] = () => e = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
+            ddInstructionSet[0x5E] = (o) => e = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
 
             // LD E, (IY + d)
-            fdInstructionSet[0x5E] = () => e = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
+            fdInstructionSet[0x5E] = (o) => e = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
 
             // LD H, (IX + d)
-            ddInstructionSet[0x66] = () => h = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
+            ddInstructionSet[0x66] = (o) => h = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
 
             // LD H, (IY + d)
-            fdInstructionSet[0x66] = () => h = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
+            fdInstructionSet[0x66] = (o) => h = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
 
             // LD L, (IX + d)
-            ddInstructionSet[0x6E] = () => l = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
+            ddInstructionSet[0x6E] = (o) => l = memory.GetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()));
 
             // LD L, (IY + d)
-            fdInstructionSet[0x6E] = () => l = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
+            fdInstructionSet[0x6E] = (o) => l = memory.GetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()));
 
 
             // ------------------------------
@@ -590,10 +609,10 @@ namespace Z80.Core
             // ------------------------------
 
             // LD (IX + d), n
-            ddInstructionSet[0x36] = () => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), GetNextOpcode());
+            ddInstructionSet[0x36] = (o) => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), GetNextOpcode());
 
             // LD (IY + d), n
-            fdInstructionSet[0x36] = () => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), GetNextOpcode());
+            fdInstructionSet[0x36] = (o) => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), GetNextOpcode());
 
             // ------------------------------
             // Destination: Indexed
@@ -601,46 +620,46 @@ namespace Z80.Core
             // ------------------------------
 
             // LD (IX + d), A
-            ddInstructionSet[0x77] = () => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), a);
+            ddInstructionSet[0x77] = (o) => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), a);
 
             // LD (IY + d), A
-            fdInstructionSet[0x77] = () => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), a);
+            fdInstructionSet[0x77] = (o) => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), a);
 
             // LD (IX + d), B
-            ddInstructionSet[0x70] = () => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), b);
+            ddInstructionSet[0x70] = (o) => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), b);
 
             // LD (IY + d), B
-            fdInstructionSet[0x70] = () => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), b);
+            fdInstructionSet[0x70] = (o) => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), b);
 
             // LD (IX + d), C
-            ddInstructionSet[0x71] = () => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), c);
+            ddInstructionSet[0x71] = (o) => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), c);
 
             // LD (IY + d), C
-            fdInstructionSet[0x71] = () => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), c);
+            fdInstructionSet[0x71] = (o) => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), c);
 
             // LD (IX + d), D
-            ddInstructionSet[0x72] = () => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), d);
+            ddInstructionSet[0x72] = (o) => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), d);
 
             // LD (IY + d), D
-            fdInstructionSet[0x72] = () => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), d);
+            fdInstructionSet[0x72] = (o) => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), d);
 
             // LD (IX + d), E
-            ddInstructionSet[0x73] = () => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), e);
+            ddInstructionSet[0x73] = (o) => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), e);
 
             // LD (IY + d), E
-            fdInstructionSet[0x73] = () => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), e);
+            fdInstructionSet[0x73] = (o) => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), e);
 
             // LD (IX + d), H
-            ddInstructionSet[0x74] = () => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), h);
+            ddInstructionSet[0x74] = (o) => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), h);
 
             // LD (IY + d), H
-            fdInstructionSet[0x74] = () => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), h);
+            fdInstructionSet[0x74] = (o) => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), h);
 
             // LD (IX + d), L
-            ddInstructionSet[0x75] = () => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), l);
+            ddInstructionSet[0x75] = (o) => memory.SetByte(CalculateAddress(ix, (sbyte)GetNextOpcode()), l);
 
             // LD (IY + d), L
-            fdInstructionSet[0x75] = () => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), l);
+            fdInstructionSet[0x75] = (o) => memory.SetByte(CalculateAddress(iy, (sbyte)GetNextOpcode()), l);
         }
 
         private ushort CalculateAddress(ushort start, sbyte offset)
@@ -648,11 +667,59 @@ namespace Z80.Core
             return (ushort)(start + offset);
         }
 
+        // Table 7, page 45
+        private void Prepare_16_Bit_Load()
+        {
+            // -------------------------
+            // Destination: Register
+            // Source:      Register
+            // -------------------------
+
+            // LD SP, HL
+            mainInstructionSet[0xF9] = (o) => sp = HL;
+
+            // LD SP, IX
+            ddInstructionSet[0xF9] = (o) => sp = ix;
+
+            // LD SP, IY
+            fdInstructionSet[0xF9] = (o) => sp = iy;
+
+            // -------------------------------
+            // Destination: Register
+            // Source:      Immediate Extended
+            // -------------------------------
+
+            // LD BC, nn
+            mainInstructionSet[0x01] = (o) => BC = GetNextLowByteHighByteWord();
+
+            // LD DE, nn
+            mainInstructionSet[0x11] = (o) => DE = GetNextLowByteHighByteWord();
+
+            // LD HL, nn
+            mainInstructionSet[0x21] = (o) => HL = GetNextLowByteHighByteWord();
+
+            // LD SP, nn
+            mainInstructionSet[0x31] = (o) => sp = GetNextLowByteHighByteWord();
+
+            // LD IX, nn
+            ddInstructionSet[0x21] = (o) => ix = GetNextLowByteHighByteWord();
+
+            // LD IY, nn
+            fdInstructionSet[0x21] = (o) => iy = GetNextLowByteHighByteWord();
+        }
+
         // Table 20, page 64
         private void Prepare_Miscellaneous_CPU_Control()
         {
             // HALT
-            mainInstructionSet[0x76] = () => Halted = true;
+            mainInstructionSet[0x76] = (o) => Halted = true;
+        }
+
+        private ushort GetNextLowByteHighByteWord()
+        {
+            byte low = GetNextOpcode();
+            byte high = GetNextOpcode();
+            return (ushort)((high << 8) + low);
         }
 
         private void PrepareInstructions()
@@ -662,21 +729,36 @@ namespace Z80.Core
             ddInstructionSet = CreateInstructionSet(0xDD);
             fdInstructionSet = CreateInstructionSet(0xFD);
 
-            mainInstructionSet[0xED] = () => edInstructionSet[GetNextOpcode()].Invoke();
-            mainInstructionSet[0xDD] = () => ddInstructionSet[GetNextOpcode()].Invoke();
-            mainInstructionSet[0xFD] = () => fdInstructionSet[GetNextOpcode()].Invoke();
+            mainInstructionSet[0xED] = (o) =>
+            {
+                byte opcode2 = GetNextOpcode();
+                edInstructionSet[opcode2].Invoke(opcode2);
+            };
+
+            mainInstructionSet[0xDD] = (o) =>
+            {
+                byte opcode2 = GetNextOpcode();
+                ddInstructionSet[opcode2].Invoke(opcode2);
+            };
+
+            mainInstructionSet[0xFD] = (o) =>
+            {
+                byte opcode2 = GetNextOpcode();
+                fdInstructionSet[opcode2].Invoke(opcode2);
+            };
 
             Prepare_8_Bit_Load();
+            Prepare_16_Bit_Load();
             Prepare_Miscellaneous_CPU_Control();
         }
 
-        private Action[] CreateInstructionSet(byte? prefixOpcode = null)
+        private Action<byte>[] CreateInstructionSet(byte? prefixOpcode = null)
         {
-            Action[] instructionSet = new Action[0x100];
+            Action<byte>[] instructionSet = new Action<byte>[0x100];
 
             for (int opcode = 0x00; opcode <= 0xff; opcode++)
             {
-                instructionSet[opcode] = () => throw new Exception($"Unknown opcode: {prefixOpcode:X2} {opcode:X2}");
+                instructionSet[opcode] = (o) => throw new Exception($"Unknown opcode: {prefixOpcode:X2} {o:X2}");
             }
 
             return instructionSet;

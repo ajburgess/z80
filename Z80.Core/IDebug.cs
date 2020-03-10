@@ -11,6 +11,7 @@ namespace Z80.Core
 
         byte A { get; set; }
         Flags F { get; set; }
+        ushort AF { get; set; }
 
         byte B { get; set; }
         byte C { get; set; }
