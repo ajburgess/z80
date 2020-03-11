@@ -245,13 +245,6 @@ namespace Z80.Core
             return opcode;
         }
 
-        private ushort GetNextOpcodeWord()
-        {
-            byte low = GetNextOpcode();
-            byte high = GetNextOpcode();
-            return (ushort)((high << 8) + low);
-        }
-
         private void ExecuteNextInstruction()
         {
             // Read opcode of next instruction
@@ -523,7 +516,7 @@ namespace Z80.Core
             // ------------------------------
 
             // LD A, (nn)
-            mainInstructionSet[0x3A] = (o) => a = memory.GetByte(GetNextOpcodeWord());
+            mainInstructionSet[0x3A] = (o) => a = memory.GetByte(GetNextLowHighOpcodeWord());
 
             // ------------------------------
             // Destination: Extended Address
@@ -531,7 +524,7 @@ namespace Z80.Core
             // ------------------------------
 
             // LD (nn), A
-            mainInstructionSet[0x32] = (o) => memory.SetByte(GetNextOpcodeWord(), a);
+            mainInstructionSet[0x32] = (o) => memory.SetByte(GetNextLowHighOpcodeWord(), a);
 
             // ------------------------------
             // Destination: Register
@@ -690,22 +683,162 @@ namespace Z80.Core
             // -------------------------------
 
             // LD BC, nn
-            mainInstructionSet[0x01] = (o) => BC = GetNextLowByteHighByteWord();
+            mainInstructionSet[0x01] = (o) => BC = GetNextLowHighOpcodeWord();
 
             // LD DE, nn
-            mainInstructionSet[0x11] = (o) => DE = GetNextLowByteHighByteWord();
+            mainInstructionSet[0x11] = (o) => DE = GetNextLowHighOpcodeWord();
 
             // LD HL, nn
-            mainInstructionSet[0x21] = (o) => HL = GetNextLowByteHighByteWord();
+            mainInstructionSet[0x21] = (o) => HL = GetNextLowHighOpcodeWord();
 
             // LD SP, nn
-            mainInstructionSet[0x31] = (o) => sp = GetNextLowByteHighByteWord();
+            mainInstructionSet[0x31] = (o) => sp = GetNextLowHighOpcodeWord();
 
             // LD IX, nn
-            ddInstructionSet[0x21] = (o) => ix = GetNextLowByteHighByteWord();
+            ddInstructionSet[0x21] = (o) => ix = GetNextLowHighOpcodeWord();
 
             // LD IY, nn
-            fdInstructionSet[0x21] = (o) => iy = GetNextLowByteHighByteWord();
+            fdInstructionSet[0x21] = (o) => iy = GetNextLowHighOpcodeWord();
+
+            // -------------------------------
+            // Destination: Register
+            // Source:      Extended
+            // -------------------------------
+
+            // LD BC, (nn)
+            edInstructionSet[0x4B] = (o) => BC = memory.GetLowHighWord(GetNextLowHighOpcodeWord());
+
+            // LD DE, (nn)
+            edInstructionSet[0x5B] = (o) => DE = memory.GetLowHighWord(GetNextLowHighOpcodeWord());
+
+            // LD HL, (nn)
+            mainInstructionSet[0x2A] = (o) => HL = memory.GetLowHighWord(GetNextLowHighOpcodeWord());
+
+            // LD SP, (nn)
+            edInstructionSet[0x7B] = (o) => sp = memory.GetLowHighWord(GetNextLowHighOpcodeWord());
+
+            // LD IX, (nn)
+            ddInstructionSet[0x2A] = (o) => ix = memory.GetLowHighWord(GetNextLowHighOpcodeWord());
+
+            // LD IY, (nn)
+            fdInstructionSet[0x2A] = (o) => iy = memory.GetLowHighWord(GetNextLowHighOpcodeWord());
+
+            // -------------------------------
+            // Destination: Extended
+            // Source:      Register
+            // -------------------------------
+
+            // LD (nn), BC
+            edInstructionSet[0x43] = (o) => memory.SetLowHighWord(GetNextLowHighOpcodeWord(), BC);
+
+            // LD (nn), DE
+            edInstructionSet[0x53] = (o) => memory.SetLowHighWord(GetNextLowHighOpcodeWord(), DE);
+
+            // LD (nn), HL
+            mainInstructionSet[0x22] = (o) => memory.SetLowHighWord(GetNextLowHighOpcodeWord(), HL);
+
+            // LD (nn), SP
+            edInstructionSet[0x73] = (o) => memory.SetLowHighWord(GetNextLowHighOpcodeWord(), sp);
+
+            // LD (nn), IX
+            ddInstructionSet[0x22] = (o) => memory.SetLowHighWord(GetNextLowHighOpcodeWord(), ix);
+
+            // LD (nn), IX
+            fdInstructionSet[0x22] = (o) => memory.SetLowHighWord(GetNextLowHighOpcodeWord(), iy);
+
+            // ---------------
+            // Push onto stack
+            // ---------------
+
+            // PUSH AF
+            mainInstructionSet[0xF6] = (o) =>
+            {
+                memory.SetByte((ushort)(--sp), a);
+                memory.SetByte((ushort)(--sp), f);
+            };
+
+            // PUSH BC
+            mainInstructionSet[0xC6] = (o) =>
+            {
+                memory.SetByte((ushort)(--sp), b);
+                memory.SetByte((ushort)(--sp), c);
+            };
+
+            // PUSH DE
+            mainInstructionSet[0xD6] = (o) =>
+            {
+                memory.SetByte((ushort)(--sp), d);
+                memory.SetByte((ushort)(--sp), e);
+            };
+
+            // PUSH HL
+            mainInstructionSet[0xE6] = (o) =>
+            {
+                memory.SetByte((ushort)(--sp), h);
+                memory.SetByte((ushort)(--sp), l);
+            };
+
+            // PUSH IX
+            ddInstructionSet[0xE6] = (o) =>
+            {
+                memory.SetByte((ushort)(--sp), GetHighByte(ix));
+                memory.SetByte((ushort)(--sp), GetLowByte(ix));
+            };
+
+            // PUSH IY
+            fdInstructionSet[0xE6] = (o) =>
+            {
+                memory.SetByte((ushort)(--sp), GetHighByte(iy));
+                memory.SetByte((ushort)(--sp), GetLowByte(iy));
+            };
+
+            // --------------
+            // Pop from stack
+            // --------------
+
+            // POP AF
+            mainInstructionSet[0xF1] = (o) =>
+            {
+                f = memory.GetByte(sp++);
+                a = memory.GetByte(sp++);
+            };
+
+            // POP BC
+            mainInstructionSet[0xC1] = (o) =>
+            {
+                c = memory.GetByte(sp++);
+                b = memory.GetByte(sp++);
+            };
+
+            // POP DE
+            mainInstructionSet[0xD1] = (o) =>
+            {
+                e = memory.GetByte(sp++);
+                d = memory.GetByte(sp++);
+            };
+
+            // POP HL
+            mainInstructionSet[0xE1] = (o) =>
+            {
+                l = memory.GetByte(sp++);
+                h = memory.GetByte(sp++);
+            };
+
+            // POP IX
+            ddInstructionSet[0xE1] = (o) =>
+            {
+                byte low = memory.GetByte(sp++);
+                byte high = memory.GetByte(sp++);
+                ix = ConvertHighLowToWord(high, low);
+            };
+
+            // POP IY
+            fdInstructionSet[0xE1] = (o) =>
+            {
+                byte low = memory.GetByte(sp++);
+                byte high = memory.GetByte(sp++);
+                iy = ConvertHighLowToWord(high, low);
+            };
         }
 
         // Table 20, page 64
@@ -715,7 +848,22 @@ namespace Z80.Core
             mainInstructionSet[0x76] = (o) => Halted = true;
         }
 
-        private ushort GetNextLowByteHighByteWord()
+        ushort ConvertHighLowToWord(byte high, byte low)
+        {
+            return (ushort)((high << 8) + low);
+        }
+
+        byte GetLowByte(ushort value)
+        {
+            return (byte)(value & 0xff);
+        }
+
+        byte GetHighByte(ushort value)
+        {
+            return (byte)((value >> 8) & 0xff);
+        }
+
+        private ushort GetNextLowHighOpcodeWord()
         {
             byte low = GetNextOpcode();
             byte high = GetNextOpcode();

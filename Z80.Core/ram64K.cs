@@ -42,6 +42,21 @@ namespace Z80.Core
             memory[contents.Length + 1] = extra2;
         }
 
+        public ushort GetLowHighWord(ushort address)
+        {
+            byte low = memory[address];
+            byte high = memory[address + 1];
+            return (ushort)((high << 8) + low);
+        }
+
+        public void SetLowHighWord(ushort address, ushort value)
+        {
+            byte low = (byte)((value >> 8) & 0xff);
+            byte high = (byte)(value & 0xff);
+            memory[address] = low;
+            memory[address + 1] = high;
+        }
+
         public byte GetByte(ushort address)
         {
             return memory[address];

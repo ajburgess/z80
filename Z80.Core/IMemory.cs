@@ -8,6 +8,8 @@ namespace Z80.Core
     {
         byte GetByte(ushort address);
         void SetByte(ushort address, byte value);
+        ushort GetLowHighWord(ushort address);
+        void SetLowHighWord(ushort address, ushort value);
         void Load(byte[] contents);
         void Load(ushort address, byte[] contents, byte extra);
         void Load(ushort address, byte[] contents, byte extra, byte extra2);
